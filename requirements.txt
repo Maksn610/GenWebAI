@@ -7,3 +7,8 @@ python-dotenv
 pydantic
 aiofiles
 langchain
+pytest
+pytest-asyncio
+langchain-community
+langchain-openai
+langchain-core

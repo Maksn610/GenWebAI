@@ -5,16 +5,19 @@ import datetime
 import random
 from typing import Dict
 from jinja2 import Environment, FileSystemLoader
-from openai import OpenAI
 from dotenv import load_dotenv
 import aiofiles
 from app.prompts import build_prompt, ALL_SECTIONS
 from app.logger_config import logger
+from langchain import LLMChain, PromptTemplate
+from langchain.chat_models import ChatOpenAI
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
-client = OpenAI(api_key=api_key)
+
 TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
+
+llm = ChatOpenAI(model_name="gpt-4", temperature=0.9, max_tokens=800)
 
 
 async def append_to_logs_async(entry: Dict):
@@ -44,18 +47,17 @@ def select_sections():
 async def generate_website_content_async(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
                                          top_p: float = 0.95) -> Dict:
     sections = select_sections()
-    logger.info(f"Building prompt with sections: {sections}")
-    system_prompt = build_prompt(topic, style, sections)
+    prompt_text = build_prompt(topic, style, sections)
 
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "system", "content": system_prompt}],
-        max_tokens=max_tokens,
-        temperature=temperature,
-        top_p=top_p
-    )
+    logger.info(f"Building LangChain prompt with sections: {sections}")
 
-    content = response.choices[0].message.content
+    # Create LangChain PromptTemplate and LLMChain
+    prompt = PromptTemplate(template=prompt_text, input_variables=[])
+    chain = LLMChain(llm=llm, prompt=prompt)
+
+    # Run the chain synchronously since LangChain doesn't support async natively
+    content = chain.run({})
+
     try:
         result = json.loads(content)
     except json.JSONDecodeError:

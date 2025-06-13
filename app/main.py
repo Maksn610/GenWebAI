@@ -1,22 +1,21 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from app.models import GenerateRequest
-import uuid
+from app.generator import generate_website_content
 
 app = FastAPI()
+
 
 @app.get("/healthcheck")
 async def healthcheck():
     return JSONResponse(content={"status": "ok"})
 
+
 @app.post("/generate")
 async def generate_sites(request: GenerateRequest):
-    job_id = str(uuid.uuid4())
-    return {
-        "message": f"Generation started",
-        "topic": request.topic,
-        "count": request.pages_count,
-        "style": request.style,
-        "max_tokens": request.max_tokens,
-        "job_id": job_id
-    }
+    page = generate_website_content(
+        topic=request.topic,
+        style=request.style,
+        max_tokens=request.max_tokens
+    )
+    return page

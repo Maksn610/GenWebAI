@@ -8,11 +8,13 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import aiofiles
 from app.prompts import build_prompt
+from app.logger_config import logger
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
 client = OpenAI(api_key=api_key)
 TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
+
 
 async def append_to_logs_async(entry: Dict):
     logs_path = "logs.json"
@@ -28,8 +30,10 @@ async def append_to_logs_async(entry: Dict):
     async with aiofiles.open(logs_path, "w", encoding="utf-8") as f:
         await f.write(json.dumps(data, indent=2))
 
+
 async def generate_website_content_async(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
                                          top_p: float = 0.95) -> Dict:
+    logger.info(f"Calling OpenAI API with topic='{topic}', style='{style}'")
     system_prompt = build_prompt(topic, style)
 
     response = client.chat.completions.create(
@@ -56,6 +60,7 @@ async def generate_website_content_async(topic: str, style: str, max_tokens: int
         sections=result["sections"]
     )
 
+    logger.info(f"Saving HTML to: {html_path}")
     async with aiofiles.open(html_path, "w", encoding="utf-8") as f:
         await f.write(rendered_html)
 
@@ -66,6 +71,8 @@ async def generate_website_content_async(topic: str, style: str, max_tokens: int
         "file_path": html_path,
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
     }
+
+    logger.info(f"Logging entry to logs.json for site_id: {site_id}")
     await append_to_logs_async(log_entry)
 
     return {
@@ -75,3 +82,8 @@ async def generate_website_content_async(topic: str, style: str, max_tokens: int
         "sections": result["sections"],
         "file_path": html_path
     }
+
+
+def generate_website_content(*args, **kwargs):
+    import asyncio
+    return asyncio.run(generate_website_content_async(*args, **kwargs))

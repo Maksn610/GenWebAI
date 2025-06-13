@@ -1,5 +1,6 @@
 import argparse
 from app.generator import generate_website_content
+from app.logger_config import logger
 
 def main():
     parser = argparse.ArgumentParser(description="Generate static websites using LLM")
@@ -13,7 +14,7 @@ def main():
     args = parser.parse_args()
 
     for i in range(args.count):
-        print(f"\n[+] Generating site {i + 1} of {args.count}...")
+        logger.info(f"[CLI] Generating site {i + 1} of {args.count} for topic='{args.topic}'")
         result = generate_website_content(
             topic=args.topic,
             style=args.style,
@@ -21,10 +22,11 @@ def main():
             temperature=args.temperature,
             top_p=args.top_p
         )
-        print(f"    Site saved to: {result['file_path']}")
+        logger.info(f"[CLI] Site saved to: {result['file_path']}")
+        print(f"\n[+] Generated site {i + 1}")
         print(f"    Title: {result['title']}")
-        print(f"    Meta: {result['meta_description']}\n")
-
+        print(f"    Meta: {result['meta_description']}")
+        print(f"    File: {result['file_path']}\n")
 
 if __name__ == "__main__":
     main()

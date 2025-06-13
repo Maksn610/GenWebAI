@@ -1,6 +1,6 @@
 import pytest
 import json
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 from app.generator import select_sections, generate_website_content_async
 
 @pytest.mark.asyncio
@@ -41,24 +41,26 @@ async def test_generate_website_content_async(mock_invoke):
     assert result["file_path"].endswith(".html")
 
 @pytest.mark.asyncio
-@patch("app.generator.RunnableSequence.invoke")
-async def test_generate_website_content_async_with_seed(mock_invoke):
+@patch("app.generator.RunnableWithMessageHistory.invoke")
+async def test_generate_website_content_async_with_session(mock_invoke):
     mock_response = {
-        "title": "Seeded Title",
-        "meta_description": "Seeded description",
+        "title": "Session Title",
+        "meta_description": "Session description",
         "sections": [
-            {"heading": "Introduction", "text": "Seeded intro"},
-            {"heading": "Summary", "text": "Seeded summary"}
+            {"heading": "Introduction", "text": "Session intro"},
+            {"heading": "Summary", "text": "Session summary"}
         ]
     }
-    mock_invoke.return_value = FakeAIMessage(json.dumps(mock_response))
+    mock_invoke.return_value = json.dumps(mock_response)
 
-    topic = "Seed Test"
-    style = "educational"
-    seed = 42
+    topic = "Session Test"
+    style = "technical"
+    session_id = "test-session-123"
 
-    result1 = await generate_website_content_async(topic, style, variation_seed=seed)
-    result2 = await generate_website_content_async(topic, style, variation_seed=seed)
+    result = await generate_website_content_async(topic, style, session_id=session_id)
 
-    assert result1["title"] == result2["title"]
-    assert result1["sections"] == result2["sections"]
+    assert "id" in result
+    assert result["title"] == mock_response["title"]
+    assert result["meta_description"] == mock_response["meta_description"]
+    assert isinstance(result["sections"], list)
+    assert result["file_path"].endswith(".html")

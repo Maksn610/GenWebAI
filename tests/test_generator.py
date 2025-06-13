@@ -39,3 +39,26 @@ async def test_generate_website_content_async(mock_invoke):
     assert result["meta_description"] == mock_response["meta_description"]
     assert isinstance(result["sections"], list)
     assert result["file_path"].endswith(".html")
+
+@pytest.mark.asyncio
+@patch("app.generator.RunnableSequence.invoke")
+async def test_generate_website_content_async_with_seed(mock_invoke):
+    mock_response = {
+        "title": "Seeded Title",
+        "meta_description": "Seeded description",
+        "sections": [
+            {"heading": "Introduction", "text": "Seeded intro"},
+            {"heading": "Summary", "text": "Seeded summary"}
+        ]
+    }
+    mock_invoke.return_value = FakeAIMessage(json.dumps(mock_response))
+
+    topic = "Seed Test"
+    style = "educational"
+    seed = 42
+
+    result1 = await generate_website_content_async(topic, style, variation_seed=seed)
+    result2 = await generate_website_content_async(topic, style, variation_seed=seed)
+
+    assert result1["title"] == result2["title"]
+    assert result1["sections"] == result2["sections"]

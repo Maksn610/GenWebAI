@@ -22,7 +22,8 @@ async def generate_sites(request: GenerateRequest):
             style=request.style,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
-            top_p=request.top_p
+            top_p=request.top_p,
+            variation_seed=request.variation_seed if hasattr(request, "variation_seed") else None,
         )
         logger.info(f"Successfully generated site: {page['id']}")
         return page

@@ -47,8 +47,16 @@ def select_sections():
 
 
 async def generate_website_content_async(
-    topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9, top_p: float = 0.95
+    topic: str,
+    style: str,
+    max_tokens: int = 800,
+    temperature: float = 0.9,
+    top_p: float = 0.95,
+    variation_seed: int | None = None,
 ) -> Dict:
+    if variation_seed is not None:
+        random.seed(variation_seed)
+
     sections = select_sections()
     prompt_text = build_prompt(topic, style, sections)
 

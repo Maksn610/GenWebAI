@@ -1,0 +1,82 @@
+from dotenv import load_dotenv
+from openai import OpenAI
+import uuid
+import os
+import json
+import datetime
+from typing import Dict
+from jinja2 import Environment, FileSystemLoader
+from app.prompts import build_prompt
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
+client = OpenAI(api_key=api_key)
+TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
+
+
+def append_to_logs(entry: Dict):
+    logs_path = "logs.json"
+    try:
+        with open(logs_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            data = []
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = []
+
+    data.append(entry)
+
+    with open(logs_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+def generate_website_content(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
+                             top_p: float = 0.95) -> Dict:
+    system_prompt = build_prompt(topic, style)
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": system_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature,
+        top_p=top_p
+    )
+
+    content = response.choices[0].message.content
+
+    try:
+        result = json.loads(content)
+    except json.JSONDecodeError:
+        raise ValueError("Model did not return valid JSON.")
+
+    site_id = str(uuid.uuid4())
+    html_path = f"sites/{site_id}.html"
+
+    template = TEMPLATE_ENV.get_template("site_template.html")
+    rendered_html = template.render(
+        title=result["title"],
+        meta_description=result["meta_description"],
+        sections=result["sections"]
+    )
+
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(rendered_html)
+
+    log_entry = {
+        "site_id": site_id,
+        "topic": topic,
+        "style": style,
+        "file_path": html_path,
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+    append_to_logs(log_entry)
+
+    return {
+        "id": site_id,
+        "title": result["title"],
+        "meta_description": result["meta_description"],
+        "sections": result["sections"],
+        "file_path": html_path
+    }

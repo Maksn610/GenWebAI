@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from app.models import GenerateRequest
 from app.generator import generate_website_content
-from fastapi.responses import FileResponse
 import os
+import json
 
 app = FastAPI()
 
@@ -32,3 +32,11 @@ async def get_site(site_id: str):
         return {"error": "Site not found"}
     return FileResponse(file_path, media_type="text/html")
 
+
+@app.get("/logs")
+async def get_logs():
+    try:
+        with open("logs.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []

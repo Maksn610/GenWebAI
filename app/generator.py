@@ -3,14 +3,28 @@ from openai import OpenAI
 import uuid
 import os
 import json
+import datetime
 from typing import Dict
 from jinja2 import Environment, FileSystemLoader
 from app.prompts import build_prompt
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
+
+
+def append_to_logs(entry: Dict):
+    logs_path = "logs.json"
+    try:
+        with open(logs_path, "r", encoding="utf-8") as f:
+            logs = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        logs = []
+
+    logs.append(entry)
+
+    with open(logs_path, "w", encoding="utf-8") as f:
+        json.dump(logs, f, indent=2)
 
 
 def generate_website_content(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
@@ -35,7 +49,7 @@ def generate_website_content(topic: str, style: str, max_tokens: int = 800, temp
         raise ValueError("Model did not return valid JSON.")
 
     site_id = str(uuid.uuid4())
-    html_path = f"sites/site_{site_id}.html"
+    html_path = f"sites/{site_id}.html"
 
     template = TEMPLATE_ENV.get_template("site_template.html")
     rendered_html = template.render(
@@ -46,6 +60,15 @@ def generate_website_content(topic: str, style: str, max_tokens: int = 800, temp
 
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(rendered_html)
+
+    log_entry = {
+        "site_id": site_id,
+        "topic": topic,
+        "style": style,
+        "file_path": html_path,
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+    append_to_logs(log_entry)
 
     return {
         "id": site_id,

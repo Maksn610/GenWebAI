@@ -39,7 +39,6 @@ def generate_website_content(topic: str, style: str, max_tokens: int = 800, temp
 
     template = TEMPLATE_ENV.get_template("site_template.html")
     rendered_html = template.render(
-        print(result["sections"]),
         title=result["title"],
         meta_description=result["meta_description"],
         sections=result["sections"]

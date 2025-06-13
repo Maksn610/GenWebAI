@@ -1,11 +1,12 @@
-from dotenv import load_dotenv
-from openai import OpenAI
 import uuid
 import os
 import json
 import datetime
 from typing import Dict
 from jinja2 import Environment, FileSystemLoader
+from openai import OpenAI
+from dotenv import load_dotenv
+import aiofiles
 from app.prompts import build_prompt
 
 load_dotenv()
@@ -13,39 +14,33 @@ api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
 client = OpenAI(api_key=api_key)
 TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
 
-
-def append_to_logs(entry: Dict):
+async def append_to_logs_async(entry: Dict):
     logs_path = "logs.json"
     try:
-        with open(logs_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, list):
-            data = []
+        async with aiofiles.open(logs_path, "r", encoding="utf-8") as f:
+            content = await f.read()
+            data = json.loads(content) if content else []
     except (FileNotFoundError, json.JSONDecodeError):
         data = []
 
     data.append(entry)
 
-    with open(logs_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    async with aiofiles.open(logs_path, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(data, indent=2))
 
-
-def generate_website_content(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
-                             top_p: float = 0.95) -> Dict:
+async def generate_website_content_async(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
+                                         top_p: float = 0.95) -> Dict:
     system_prompt = build_prompt(topic, style)
 
     response = client.chat.completions.create(
         model="gpt-4",
-        messages=[
-            {"role": "system", "content": system_prompt}
-        ],
+        messages=[{"role": "system", "content": system_prompt}],
         max_tokens=max_tokens,
         temperature=temperature,
         top_p=top_p
     )
 
     content = response.choices[0].message.content
-
     try:
         result = json.loads(content)
     except json.JSONDecodeError:
@@ -61,8 +56,8 @@ def generate_website_content(topic: str, style: str, max_tokens: int = 800, temp
         sections=result["sections"]
     )
 
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(rendered_html)
+    async with aiofiles.open(html_path, "w", encoding="utf-8") as f:
+        await f.write(rendered_html)
 
     log_entry = {
         "site_id": site_id,
@@ -71,7 +66,7 @@ def generate_website_content(topic: str, style: str, max_tokens: int = 800, temp
         "file_path": html_path,
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
     }
-    append_to_logs(log_entry)
+    await append_to_logs_async(log_entry)
 
     return {
         "id": site_id,

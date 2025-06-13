@@ -17,14 +17,17 @@ def append_to_logs(entry: Dict):
     logs_path = "logs.json"
     try:
         with open(logs_path, "r", encoding="utf-8") as f:
-            logs = json.load(f)
+            data = json.load(f)
+        if not isinstance(data, list):
+            data = []
     except (FileNotFoundError, json.JSONDecodeError):
-        logs = []
+        data = []
 
-    logs.append(entry)
+    data.append(entry)
 
     with open(logs_path, "w", encoding="utf-8") as f:
-        json.dump(logs, f, indent=2)
+        json.dump(data, f, indent=2)
+
 
 
 def generate_website_content(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,

@@ -9,8 +9,10 @@ from dotenv import load_dotenv
 import aiofiles
 from app.prompts import build_prompt, ALL_SECTIONS
 from app.logger_config import logger
-from langchain import LLMChain, PromptTemplate
-from langchain.chat_models import ChatOpenAI
+
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain.schema.runnable import RunnableSequence
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
@@ -44,22 +46,25 @@ def select_sections():
     return sections
 
 
-async def generate_website_content_async(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
-                                         top_p: float = 0.95) -> Dict:
+async def generate_website_content_async(
+    topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9, top_p: float = 0.95
+) -> Dict:
     sections = select_sections()
     prompt_text = build_prompt(topic, style, sections)
 
     logger.info(f"Building LangChain prompt with sections: {sections}")
 
-    # Create LangChain PromptTemplate and LLMChain
     prompt = PromptTemplate(template=prompt_text, input_variables=[])
-    chain = LLMChain(llm=llm, prompt=prompt)
+    runnable = RunnableSequence(prompt, llm)
+    content = runnable.invoke({})
 
-    # Run the chain synchronously since LangChain doesn't support async natively
-    content = chain.run({})
+    if hasattr(content, "content"):
+        content_str = content.content
+    else:
+        content_str = str(content)
 
     try:
-        result = json.loads(content)
+        result = json.loads(content_str)
     except json.JSONDecodeError:
         raise ValueError("Model did not return valid JSON.")
 

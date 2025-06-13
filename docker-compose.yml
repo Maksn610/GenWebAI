@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  genwebai:
+    build: .
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./sites:/app/sites
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY_DOCKER}

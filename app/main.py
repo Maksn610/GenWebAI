@@ -16,6 +16,8 @@ async def generate_sites(request: GenerateRequest):
     page = generate_website_content(
         topic=request.topic,
         style=request.style,
-        max_tokens=request.max_tokens
+        max_tokens=request.max_tokens,
+        temperature=request.temperature,
+        top_p=request.top_p
     )
     return page

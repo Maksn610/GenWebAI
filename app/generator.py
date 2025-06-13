@@ -2,12 +2,13 @@ import uuid
 import os
 import json
 import datetime
+import random
 from typing import Dict
 from jinja2 import Environment, FileSystemLoader
 from openai import OpenAI
 from dotenv import load_dotenv
 import aiofiles
-from app.prompts import build_prompt
+from app.prompts import build_prompt, ALL_SECTIONS
 from app.logger_config import logger
 
 load_dotenv()
@@ -31,10 +32,20 @@ async def append_to_logs_async(entry: Dict):
         await f.write(json.dumps(data, indent=2))
 
 
+def select_sections():
+    intro = "Introduction"
+    summary = "Summary"
+    middle = random.sample([s for s in ALL_SECTIONS if s not in (intro, summary)], k=3)
+    sections = [intro] + middle + [summary]
+    logger.info(f"Selected sections: {sections}")
+    return sections
+
+
 async def generate_website_content_async(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,
                                          top_p: float = 0.95) -> Dict:
-    logger.info(f"Calling OpenAI API with topic='{topic}', style='{style}'")
-    system_prompt = build_prompt(topic, style)
+    sections = select_sections()
+    logger.info(f"Building prompt with sections: {sections}")
+    system_prompt = build_prompt(topic, style, sections)
 
     response = client.chat.completions.create(
         model="gpt-4",

@@ -9,7 +9,8 @@ from jinja2 import Environment, FileSystemLoader
 from app.prompts import build_prompt
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
+client = OpenAI(api_key=api_key)
 TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
 
 
@@ -27,7 +28,6 @@ def append_to_logs(entry: Dict):
 
     with open(logs_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-
 
 
 def generate_website_content(topic: str, style: str, max_tokens: int = 800, temperature: float = 0.9,

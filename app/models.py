@@ -8,3 +8,4 @@ class GenerateRequest(BaseModel):
     max_tokens: int = Field(800, ge=100, le=2000)
     temperature: Optional[float] = Field(0.9, ge=0.0, le=1.5)
     top_p: Optional[float] = Field(0.95, ge=0.0, le=1.0)
+    variation_seed: Optional[int] = Field(None, description="Seed for prompt variation randomness")

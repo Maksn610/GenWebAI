@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse, FileResponse
 from app.models import GenerateRequest
 from app.generator import generate_website_content_async
@@ -14,8 +14,8 @@ async def healthcheck():
     return JSONResponse(content={"status": "ok"})
 
 @app.post("/generate")
-async def generate_sites(request: GenerateRequest):
-    logger.info(f"Received request to generate site: topic='{request.topic}', style='{request.style}'")
+async def generate_sites(request: GenerateRequest, session_id: str | None = Query(default=None)):
+    logger.info(f"Received request to generate site: topic='{request.topic}', style='{request.style}', session_id='{session_id}'")
     try:
         page = await generate_website_content_async(
             topic=request.topic,
@@ -24,6 +24,7 @@ async def generate_sites(request: GenerateRequest):
             temperature=request.temperature,
             top_p=request.top_p,
             variation_seed=request.variation_seed if hasattr(request, "variation_seed") else None,
+            session_id=session_id,
         )
         logger.info(f"Successfully generated site: {page['id']}")
         return page

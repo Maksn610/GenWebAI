@@ -13,6 +13,8 @@ from app.logger_config import logger
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable import RunnableSequence
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from app.memory import memory_manager
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY_DOCKER")
@@ -53,6 +55,7 @@ async def generate_website_content_async(
     temperature: float = 0.9,
     top_p: float = 0.95,
     variation_seed: int | None = None,
+    session_id: str | None = None,
 ) -> Dict:
     if variation_seed is not None:
         random.seed(variation_seed)
@@ -63,13 +66,28 @@ async def generate_website_content_async(
     logger.info(f"Building LangChain prompt with sections: {sections}")
 
     prompt = PromptTemplate(template=prompt_text, input_variables=[])
-    runnable = RunnableSequence(prompt, llm)
-    content = runnable.invoke({})
+    runnable_base = RunnableSequence(prompt, llm)
 
-    if hasattr(content, "content"):
-        content_str = content.content
+    if session_id is not None:
+        # Створюємо RunnableWithMessageHistory, передаємо фабрику історії для сесії
+        runnable = RunnableWithMessageHistory(
+            runnable_base,
+            get_session_history=memory_manager.get_session_history,
+            input_messages_key="input",
+            history_messages_key="history",
+        )
+        # Виклик з config для передачі session_id
+        response = runnable.invoke(
+            {"input": prompt_text},
+            config={"configurable": {"session_id": session_id}},
+        )
     else:
-        content_str = str(content)
+        response = runnable_base.invoke({})
+
+    if hasattr(response, "content"):
+        content_str = response.content
+    else:
+        content_str = str(response)
 
     try:
         result = json.loads(content_str)

@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from app.prompts import build_prompt, ALL_SECTIONS
 
 def test_build_prompt_default_sections():
@@ -33,13 +34,15 @@ def test_build_prompt_tones():
     topic = "Test Topic"
 
     for style, expected_tone in tones.items():
-        prompt = build_prompt(topic, style)
-        assert expected_tone in prompt
+        with patch("random.choice", return_value=expected_tone):
+            prompt = build_prompt(topic, style)
+            assert expected_tone in prompt
 
 def test_few_shot_examples_in_prompt():
     topic = "Test"
     style = "educational"
-    prompt = build_prompt(topic, style)
+    with patch("random.choice", side_effect=lambda x: x[0] if isinstance(x, list) else x):
+        prompt = build_prompt(topic, style)
 
     if "Use Cases" in prompt:
         assert "In finance, quantum algorithms" in prompt

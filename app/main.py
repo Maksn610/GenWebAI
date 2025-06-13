@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from app.models import GenerateRequest
 from app.generator import generate_website_content
+from fastapi.responses import FileResponse
+import os
 
 app = FastAPI()
 
@@ -21,3 +23,12 @@ async def generate_sites(request: GenerateRequest):
         top_p=request.top_p
     )
     return page
+
+
+@app.get("/site/{site_id}")
+async def get_site(site_id: str):
+    file_path = f"sites/{site_id}.html"
+    if not os.path.exists(file_path):
+        return {"error": "Site not found"}
+    return FileResponse(file_path, media_type="text/html")
+

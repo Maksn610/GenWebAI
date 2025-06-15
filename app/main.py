@@ -6,16 +6,23 @@ import aiofiles
 import os
 import json
 from app.logger_config import logger
+from typing import Optional
 
 app = FastAPI()
 
+
 @app.get("/healthcheck")
-async def healthcheck():
-    return JSONResponse(content={"status": "ok"})
+async def healthcheck() -> dict:
+    return {"status": "ok"}
+
 
 @app.post("/generate")
-async def generate_sites(request: GenerateRequest, session_id: str | None = Query(default=None)):
-    logger.info(f"Received request to generate site: topic='{request.topic}', style='{request.style}', session_id='{session_id}'")
+async def generate_sites(
+        request: GenerateRequest, session_id: Optional[str] = Query(default=None)
+):
+    logger.info(
+        f"Received request to generate site: topic='{request.topic}', style='{request.style}', session_id='{session_id}'"
+    )
     try:
         page = await generate_website_content_async(
             topic=request.topic,
@@ -23,7 +30,7 @@ async def generate_sites(request: GenerateRequest, session_id: str | None = Quer
             max_tokens=request.max_tokens,
             temperature=request.temperature,
             top_p=request.top_p,
-            variation_seed=request.variation_seed if hasattr(request, "variation_seed") else None,
+            variation_seed=request.variation_seed,
             session_id=session_id,
         )
         logger.info(f"Successfully generated site: {page['id']}")
@@ -32,14 +39,16 @@ async def generate_sites(request: GenerateRequest, session_id: str | None = Quer
         logger.exception("Error during site generation")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+
 @app.get("/site/{site_id}")
 async def get_site(site_id: str):
     file_path = f"sites/{site_id}.html"
     if not os.path.exists(file_path):
-        logger.warning(f"Site not found: {site_id}")
-        return {"error": "Site not found"}
+        logger.error(f"Site not found: {site_id}")
+        return JSONResponse(status_code=404, content={"error": "Site not found"})
     logger.info(f"Returning site: {site_id}")
     return FileResponse(file_path, media_type="text/html")
+
 
 @app.get("/logs")
 async def get_logs():

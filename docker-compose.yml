@@ -8,4 +8,4 @@ services:
     volumes:
       - ./sites:/app/sites
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY_DOCKER}
+      OPENAI_API_KEY: ${OPENAI_API_KEY_DOCKER}

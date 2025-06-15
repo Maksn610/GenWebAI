@@ -1,5 +1,4 @@
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.messages import BaseMessage
 from typing import Dict
 
 class MemoryManager:

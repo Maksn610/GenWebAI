@@ -11,6 +11,9 @@
     <section>
         <h2>{{ section.heading }}</h2>
         <p>{{ section.text }}</p>
+        {% if section.image_path %}
+        <img src="{{ section.image_path }}" alt="Section image">
+        {% endif %}
     </section>
     {% endfor %}
 </body>

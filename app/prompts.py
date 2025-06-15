@@ -74,6 +74,7 @@ TONE_VARIANTS = {
     ]
 }
 
+
 def build_prompt(topic: str, style: str, sections=None) -> str:
     tone_choices = TONE_VARIANTS.get(style, TONE_VARIANTS["neutral"])
     tone = random.choice(tone_choices)
@@ -94,15 +95,24 @@ def build_prompt(topic: str, style: str, sections=None) -> str:
             examples_text += f"\n\nSection: {section}\nExample: {example}"
 
     return f"""
-You are an expert content writer. Write a single-page website on the topic: "{topic}".
+You are an expert website copywriter and research assistant. Use external tools (like Wikipedia or DuckDuckGo) if needed.
+
+Write a single-page website on the topic: "{topic}".
 Use a {tone} tone.
 
 Include the following sections in order:
 - {sections_text}
 
-Each section should have a heading (the section name) and a paragraph of content.
+Each section should have:
+- a heading (the section name)
+- a paragraph of content
+- a short description of an image that could visually represent this section
 
-Here are examples to guide your writing:{examples_text}
-
-Return the result as valid JSON with keys: "title", "meta_description", and "sections" (list of dicts with heading and text).
+Return the result as valid JSON with keys:
+- "title": string
+- "meta_description": string
+- "sections": list of sections, each section must be a dict with:
+    - "heading": string
+    - "text": string
+    - "image_prompt": string (image description)
 """

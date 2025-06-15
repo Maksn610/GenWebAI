@@ -3,20 +3,18 @@ import os
 import json
 import datetime
 import random
-from jinja2 import Environment, FileSystemLoader
 from dotenv import load_dotenv
 import aiofiles
-
 from app.prompts import build_prompt, ALL_SECTIONS
 from app.logger_config import logger
-from app.utils import create_image_from_prompt
+from app.utils import create_image_from_prompt, read_logs_file
 from app.quality_metrics import (
     get_site_token_stats,
     get_section_similarities,
     get_title_uniqueness_score,
 )
 from app.memory import memory_manager
-
+from app.config import TEMPLATE_ENV
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -26,9 +24,7 @@ from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
 from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
 
 load_dotenv()
-TEMPLATE_ENV = Environment(loader=FileSystemLoader("app/templates"))
 
-# Tools
 duckduckgo_tool = DuckDuckGoSearchRun()
 wikipedia_tool = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 tools = [
@@ -116,16 +112,9 @@ async def render_html_to_file(result: dict, site_id: str) -> str:
 
 
 async def log_generation(entry: dict):
-    logs_path = "logs.json"
-    try:
-        async with aiofiles.open(logs_path, "r", encoding="utf-8") as f:
-            content = await f.read()
-            logs = json.loads(content) if content else []
-    except (FileNotFoundError, json.JSONDecodeError):
-        logs = []
-
+    logs = await read_logs_file("logs.json")
     logs.append(entry)
-    async with aiofiles.open(logs_path, "w", encoding="utf-8") as f:
+    async with aiofiles.open("logs.json", "w", encoding="utf-8") as f:
         await f.write(json.dumps(logs, indent=2, ensure_ascii=False))
 
 
@@ -157,13 +146,8 @@ async def generate_website_content_async(
     site_id = str(uuid.uuid4())
     render_images(result, site_id)
 
-    try:
-        async with aiofiles.open("logs.json", "r", encoding="utf-8") as f:
-            past_content = await f.read()
-            past_logs = json.loads(past_content) if past_content else []
-            past_titles = [entry.get("title", "") for entry in past_logs if "title" in entry]
-    except (FileNotFoundError, json.JSONDecodeError):
-        past_titles = []
+    past_logs = await read_logs_file("logs.json")
+    past_titles = [entry.get("title", "") for entry in past_logs if "title" in entry]
 
     result["metrics"] = calculate_quality_metrics(result, past_titles)
     html_path = await render_html_to_file(result, site_id)

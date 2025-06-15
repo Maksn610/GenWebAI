@@ -31,9 +31,14 @@ async def test_generate_website_content_async(mock_ainvoke):
     mock_ainvoke.return_value = FakeAIMessage(mock_response)
 
     result = await generate_website_content_async(topic="Test Topic", style="educational")
+
     assert "id" in result
     assert isinstance(result["title"], str)
     assert "Test Topic" in result["title"]
+    assert "metrics" in result
+    assert "token_count" in result["metrics"]
+    assert "avg_section_similarity" in result["metrics"]
+    assert "title_uniqueness_score" in result["metrics"]
 
 
 @pytest.mark.asyncio
@@ -59,8 +64,13 @@ async def test_generate_website_content_async_with_session(mock_ainvoke):
         style="technical",
         session_id="test-session-123"
     )
+
     assert "id" in result
     assert "Session" in result["title"]
+    assert "metrics" in result
+    assert "token_count" in result["metrics"]
+    assert "avg_section_similarity" in result["metrics"]
+    assert "title_uniqueness_score" in result["metrics"]
 
 
 @pytest.mark.asyncio
@@ -75,6 +85,7 @@ async def test_generate_with_variation_seed():
         style="educational",
         variation_seed=123
     )
+
     assert isinstance(result1["title"], str)
     assert isinstance(result2["title"], str)
     assert result1["title"] != "" and result2["title"] != ""

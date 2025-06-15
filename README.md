@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](Dockerfile)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](tests/)
-
+![Coverage](https://codecov.io/gh/Maksn610/GenWebAI/branch/main/graph/badge.svg)
 ## 🌟 Features
 
 - 🤖 AI-Powered Content Generation

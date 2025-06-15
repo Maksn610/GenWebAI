@@ -19,5 +19,86 @@
     "style": "technical",
     "file_path": "sites/d1369d56-6825-4f42-b167-a5277f0e51b4.html",
     "timestamp": "2025-06-15T11:20:45.885152Z"
+  },
+  {
+    "site_id": "c197fcd5-557b-4b38-af5a-a8a020f4cfa2",
+    "topic": "Quantum Computing",
+    "style": "technical",
+    "file_path": "sites/c197fcd5-557b-4b38-af5a-a8a020f4cfa2.html",
+    "timestamp": "2025-06-15T11:37:38.527089Z"
+  },
+  {
+    "site_id": "964a1a56-f086-485e-aa67-1e77da240020",
+    "topic": "History and Applications of Blockchain in Africa",
+    "style": "technical",
+    "file_path": "sites/964a1a56-f086-485e-aa67-1e77da240020.html",
+    "timestamp": "2025-06-15T11:43:49.725348Z"
+  },
+  {
+    "site_id": "a2525674-a021-4050-8c91-30d35c6eb335",
+    "topic": "Comparison of Llama3 and GPT-4 Performance in Real-World Benchmarks",
+    "style": "technical",
+    "file_path": "sites/a2525674-a021-4050-8c91-30d35c6eb335.html",
+    "timestamp": "2025-06-15T11:44:17.781672Z"
+  },
+  {
+    "site_id": "c2c7eb19-564b-490b-a04a-e412d9b65132",
+    "topic": "Rise of Edge AI in Wearable Devices in 2024",
+    "style": "educational",
+    "file_path": "sites/c2c7eb19-564b-490b-a04a-e412d9b65132.html",
+    "timestamp": "2025-06-15T11:44:44.235650Z"
+  },
+  {
+    "site_id": "c4c323ff-6604-4b79-b83d-c7607a27bca0",
+    "topic": "Applications of AI in Healthcare",
+    "style": "educational",
+    "file_path": "sites/c4c323ff-6604-4b79-b83d-c7607a27bca0.html",
+    "timestamp": "2025-06-15T12:01:19.452180Z"
+  },
+  {
+    "site_id": "737ef10c-e129-4223-899e-3c476d355b32",
+    "topic": "AI in Finance",
+    "style": "technical",
+    "file_path": "sites/737ef10c-e129-4223-899e-3c476d355b32.html",
+    "timestamp": "2025-06-15T12:14:53.340350Z",
+    "metrics": {
+      "token_count": 377,
+      "avg_section_similarity": 0.764
+    }
+  },
+  {
+    "site_id": "a3ad151c-f62a-4cb7-a022-76cd87012481",
+    "topic": "AI in Finance",
+    "style": "technical",
+    "file_path": "sites/a3ad151c-f62a-4cb7-a022-76cd87012481.html",
+    "timestamp": "2025-06-15T12:17:25.520496Z",
+    "metrics": {
+      "token_count": 349,
+      "avg_section_similarity": 0.6931
+    }
+  },
+  {
+    "site_id": "aa691649-a717-4f42-8744-b9374201c398",
+    "topic": "AI in Healthcare",
+    "style": "educational",
+    "file_path": "sites/aa691649-a717-4f42-8744-b9374201c398.html",
+    "timestamp": "2025-06-15T12:19:48.501871Z",
+    "metrics": {
+      "token_count": 299,
+      "avg_section_similarity": 0.6525
+    }
+  },
+  {
+    "site_id": "767ad9d4-7aca-42bc-a78c-2f7eae6f1f2c",
+    "topic": "AI in Healthcare",
+    "style": "educational",
+    "file_path": "sites/767ad9d4-7aca-42bc-a78c-2f7eae6f1f2c.html",
+    "timestamp": "2025-06-15T12:21:56.764654Z",
+    "title": "AI in Healthcare: Revolutionizing Patient Care",
+    "metrics": {
+      "token_count": 419,
+      "avg_section_similarity": 0.72,
+      "title_uniqueness_score": 1.0
+    }
   }
 ]

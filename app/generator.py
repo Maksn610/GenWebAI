@@ -49,13 +49,13 @@ def select_sections():
 
 
 async def generate_website_content_async(
-    topic: str,
-    style: str,
-    max_tokens: int = 800,
-    temperature: float = 0.9,
-    top_p: float = 0.95,
-    variation_seed: int | None = None,
-    session_id: str | None = None,
+        topic: str,
+        style: str,
+        max_tokens: int = 800,
+        temperature: float = 0.9,
+        top_p: float = 0.95,
+        variation_seed: int | None = None,
+        session_id: str | None = None,
 ) -> Dict:
     if variation_seed is not None:
         random.seed(variation_seed)
@@ -69,14 +69,12 @@ async def generate_website_content_async(
     runnable_base = RunnableSequence(prompt, llm)
 
     if session_id is not None:
-        # Створюємо RunnableWithMessageHistory, передаємо фабрику історії для сесії
         runnable = RunnableWithMessageHistory(
             runnable_base,
             get_session_history=memory_manager.get_session_history,
             input_messages_key="input",
             history_messages_key="history",
         )
-        # Виклик з config для передачі session_id
         response = runnable.invoke(
             {"input": prompt_text},
             config={"configurable": {"session_id": session_id}},
@@ -96,7 +94,7 @@ async def generate_website_content_async(
 
     site_id = str(uuid.uuid4())
     html_path = f"sites/{site_id}.html"
-
+    os.makedirs("sites", exist_ok=True)
     template = TEMPLATE_ENV.get_template("site_template.html")
     rendered_html = template.render(
         title=result["title"],

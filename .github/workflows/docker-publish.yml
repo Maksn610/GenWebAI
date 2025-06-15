@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  IMAGE_NAME: ghcr.io/maksn610/genwebai:latest
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -17,12 +20,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u maksn610 --password-stdin
 
       - name: Build Docker image
-        run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/genwebai:latest .
+        run: docker build -t $IMAGE_NAME .
 
       - name: Push Docker image
-        run: |
-          docker push ghcr.io/${{ github.repository_owner }}/genwebai:latest
+        run: docker push $IMAGE_NAME

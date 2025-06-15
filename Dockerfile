@@ -1,21 +1,19 @@
 FROM python:3.10-slim
 
-# Set work directory
 WORKDIR /app
 
-# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app files
 COPY app app
-COPY generate.py .
+COPY generate.py ./
+COPY site_template.html ./app/templates/
+COPY logger_config.py ./app/
+
 RUN echo "[]" > logs.json
 
-
-# Create sites folder (for volume mapping)
-RUN mkdir sites
+RUN mkdir -p /app/sites
 VOLUME ["/app/sites"]
 
-# Expose port and run FastAPI app
+EXPOSE 8010
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8010"]

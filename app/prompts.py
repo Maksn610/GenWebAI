@@ -75,9 +75,9 @@ TONE_VARIANTS = {
 }
 
 
-def build_prompt(topic: str, style: str, sections=None) -> str:
-    tone_choices = TONE_VARIANTS.get(style, TONE_VARIANTS["neutral"])
-    tone = random.choice(tone_choices)
+def build_prompt(topic: str, style: str, sections: list[str] | None = None) -> str:
+    tone_choices = TONE_VARIANTS.get(style)
+    tone = random.choice(tone_choices) if tone_choices else "neutral and balanced"
 
     if sections is None:
         intro = "Introduction"
@@ -89,13 +89,12 @@ def build_prompt(topic: str, style: str, sections=None) -> str:
 
     examples_text = ""
     for section in sections:
-        examples = FEW_SHOT_EXAMPLES.get(section, [""])
-        example = random.choice(examples) if examples else ""
-        if example:
+        examples = FEW_SHOT_EXAMPLES.get(section, [])
+        if examples:
+            example = random.choice(examples)
             examples_text += f"\n\nSection: {section}\nExample: {example}"
 
-    return f"""
-You are an expert website copywriter and research assistant. Use external tools (like Wikipedia or DuckDuckGo) if needed.
+    prompt = f"""You are an expert website copywriter and research assistant. Use external tools (like Wikipedia or DuckDuckGo) if needed.
 
 Write a single-page website on the topic: "{topic}".
 Use a {tone} tone.
@@ -115,4 +114,6 @@ Return the result as valid JSON with keys:
     - "heading": string
     - "text": string
     - "image_prompt": string (image description)
+{examples_text}
 """
+    return prompt

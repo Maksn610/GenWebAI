@@ -2,26 +2,20 @@ from typing import List, Dict
 from sentence_transformers import SentenceTransformer, util
 import tiktoken
 
-# Token encoder для GPT-4
 encoder = tiktoken.encoding_for_model("gpt-4")
-
-# Embedding модель для similarity
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def count_tokens(text: str) -> int:
-    """Підрахунок токенів у тексті (GPT-4 tokenizer)."""
-    return len(encoder.encode(text))
+    return len(encoder.encode(text, disallowed_special=()))
 
 
 def get_site_token_stats(sections: List[Dict]) -> int:
-    """Сумарна кількість токенів у всіх секціях."""
     all_text = " ".join([s.get("text", "") for s in sections])
     return count_tokens(all_text)
 
 
 def get_section_similarities(sections: List[Dict]) -> float:
-    """Середня cosine similarity між усіма парами секцій."""
     texts = [s.get("text", "") for s in sections]
     if len(texts) < 2:
         return 0.0
@@ -29,16 +23,15 @@ def get_section_similarities(sections: List[Dict]) -> float:
     embeddings = embedding_model.encode(texts, convert_to_tensor=True)
     sim_matrix = util.pytorch_cos_sim(embeddings, embeddings)
 
-    scores = []
-    for i in range(len(texts)):
-        for j in range(i + 1, len(texts)):
-            scores.append(sim_matrix[i][j].item())
-
+    scores = [
+        sim_matrix[i][j].item()
+        for i in range(len(texts))
+        for j in range(i + 1, len(texts))
+    ]
     return sum(scores) / len(scores) if scores else 0.0
 
 
 def get_title_uniqueness_score(title: str, previous_titles: List[str]) -> float:
-    """Оцінка унікальності заголовку відносно попередніх."""
     if not previous_titles:
         return 1.0
 

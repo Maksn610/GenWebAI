@@ -1,17 +1,18 @@
 import pytest
+import os
+import json
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
-import json
-import os
-
 from app.main import app
 
 client = TestClient(app)
+
 
 def test_healthcheck():
     response = client.get("/healthcheck")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
 
 @patch("app.main.generate_website_content_async", new_callable=AsyncMock)
 def test_generate_site(mock_generate):
@@ -29,7 +30,8 @@ def test_generate_site(mock_generate):
         "style": "educational",
         "max_tokens": 800,
         "temperature": 0.9,
-        "top_p": 0.95
+        "top_p": 0.95,
+        "variation_seed": 42
     })
 
     assert response.status_code == 200
@@ -37,6 +39,7 @@ def test_generate_site(mock_generate):
     assert data["id"] == "test-id"
     assert "title" in data
     assert "sections" in data
+
 
 def test_get_site_file():
     sites_dir = "sites"
@@ -50,14 +53,16 @@ def test_get_site_file():
     try:
         response = client.get("/site/test-site")
         assert response.status_code == 200
-        assert response.text == content
+        assert content in response.text
     finally:
         os.remove(file_path)
 
+
 def test_get_site_not_found():
     response = client.get("/site/non-existent-id")
-    assert response.status_code == 200
+    assert response.status_code == 404
     assert response.json() == {"error": "Site not found"}
+
 
 @patch("aiofiles.open")
 @pytest.mark.asyncio

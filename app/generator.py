@@ -65,49 +65,42 @@ def select_sections():
 
 
 async def generate_website_content_async(
-        topic: str,
-        style: str,
-        max_tokens: int = 800,
-        temperature: float = 0.9,
-        top_p: float = 0.95,
-        variation_seed: int | None = None,
-        session_id: str | None = None,
-) -> Dict:
-    if variation_seed is not None:
-        random.seed(variation_seed)
-
-    sections = select_sections()
+    topic: str,
+    style: str,
+    max_tokens: int = 800,
+    temperature: float = 0.9,
+    top_p: float = 0.95,
+    variation_seed: int | None = None,
+    session_id: str | None = None,
+) -> dict:
+    sections = random.sample(ALL_SECTIONS, random.randint(3, 5))
     prompt_text = build_prompt(topic, style, sections)
 
-    logger.info(f"Building LangChain prompt with sections: {sections}")
-
+    llm = ChatOpenAI(model_name="gpt-4", temperature=temperature, max_tokens=max_tokens)
     prompt = PromptTemplate(template=prompt_text, input_variables=["input"])
-    runnable_base = RunnableSequence(prompt, llm).with_config({"tags": ["site_generation"]})
+    base_runnable = RunnableSequence(prompt, llm).with_config({"tags": ["site_generation"]})
 
-    if session_id is not None:
+    if session_id:
         runnable = RunnableWithMessageHistory(
-            runnable_base,
+            base_runnable,
             get_session_history=memory_manager.get_session_history,
             input_messages_key="input",
             history_messages_key="history",
             tools=tools,
         )
-        response = runnable.invoke(
+        response = await runnable.ainvoke(
             {"input": topic},
             config={"configurable": {"session_id": session_id}},
         )
     else:
-        response = runnable_base.invoke({"input": topic})
+        response = await base_runnable.ainvoke({"input": topic})
 
     content_str = response.content if hasattr(response, "content") else str(response)
-
-    try:
-        result = json.loads(content_str)
-    except json.JSONDecodeError:
-        raise ValueError("Model did not return valid JSON.")
+    result = json.loads(content_str)
 
     site_id = str(uuid.uuid4())
     html_path = f"sites/{site_id}.html"
+    os.makedirs("sites", exist_ok=True)
     os.makedirs("sites/images", exist_ok=True)
 
     for i, section in enumerate(result["sections"]):
@@ -118,7 +111,6 @@ async def generate_website_content_async(
             create_image_from_prompt(prompt, image_path)
             section["image_path"] = f"images/{image_filename}"
 
-    # Метрики
     token_count = get_site_token_stats(result["sections"])
     avg_similarity = round(get_section_similarities(result["sections"]), 4)
 
@@ -135,32 +127,40 @@ async def generate_website_content_async(
     result["metrics"] = {
         "token_count": token_count,
         "avg_section_similarity": avg_similarity,
-        "title_uniqueness_score": title_uniqueness
+        "title_uniqueness_score": title_uniqueness,
     }
 
     template = TEMPLATE_ENV.get_template("site_template.html")
     rendered_html = template.render(
         title=result["title"],
         meta_description=result["meta_description"],
-        sections=result["sections"]
+        sections=result["sections"],
     )
 
-    logger.info(f"Saving HTML to: {html_path}")
     async with aiofiles.open(html_path, "w", encoding="utf-8") as f:
         await f.write(rendered_html)
 
-    log_entry = {
+    entry = {
         "site_id": site_id,
         "topic": topic,
         "style": style,
         "file_path": html_path,
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
         "title": result["title"],
-        "metrics": result["metrics"]
+        "metrics": result["metrics"],
     }
 
-    logger.info(f"Logging entry to logs.json for site_id: {site_id}")
-    await append_to_logs_async(log_entry)
+    try:
+        async with aiofiles.open("logs.json", "r+", encoding="utf-8") as f:
+            content = await f.read()
+            logs = json.loads(content) if content else []
+            logs.append(entry)
+            await f.seek(0)
+            await f.write(json.dumps(logs, ensure_ascii=False, indent=2))
+            await f.truncate()
+    except FileNotFoundError:
+        async with aiofiles.open("logs.json", "w", encoding="utf-8") as f:
+            await f.write(json.dumps([entry], ensure_ascii=False, indent=2))
 
     return {
         "id": site_id,
@@ -168,8 +168,9 @@ async def generate_website_content_async(
         "meta_description": result["meta_description"],
         "sections": result["sections"],
         "file_path": html_path,
-        "metrics": result["metrics"]
+        "metrics": result["metrics"],
     }
+
 
 
 def generate_website_content(*args, **kwargs):

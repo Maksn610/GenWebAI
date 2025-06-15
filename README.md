@@ -40,8 +40,22 @@ source .venv/bin/activate  # Linux/Mac
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the application
-python generate.py
+# Generate a website
+python generate.py --topic "AI in Healthcare" --style technical
+```
+
+### Example Output
+```
+[2025-06-16 00:04:49,843] INFO: [CLI] Generating site 1 of 1 for topic='AI in Healthcare'
+[2025-06-16 00:04:49,844] INFO: Generating website for topic='AI in Healthcare', style='technical'
+[2025-06-16 00:04:49,845] INFO: Selected sections: ['Introduction', 'Use Cases', 'Technical Details', 'Challenges', 'Summary']
+[2025-06-16 00:04:50,970] INFO: Calling LangChain runnable...
+[2025-06-16 00:05:10,865] INFO: [CLI] Site saved to: sites/d392a9ca-2a0c-45fe-8e93-3fb6cfc4dbe8.html
+
+[✔] Site 1/1
+    📄 Title: AI in Healthcare
+    📝 Meta: An in-depth look at the implementation, applications, technical aspects, and challenges of Artificial Intelligence in the healthcare sector.
+    📁 Path: sites/d392a9ca-2a0c-45fe-8e93-3fb6cfc4dbe8.html
 ```
 
 ### Docker Deployment

@@ -23,9 +23,7 @@
 - Pytest
 - Modern Python Libraries
 
-## 🚀 Quick Start
-
-### Local Development
+## 🚀 Quick Start### Local Development
 
 ```bash
 # Clone the repository
@@ -40,27 +38,28 @@ source .venv/bin/activate  # Linux/Mac
 # Install dependencies
 pip install -r requirements.txt
 
+# Copy and configure environment variables
+cp .env.example .env  # For Windows use: copy .env.example .env
+# Then open the .env file and paste your OpenAI API key
+
 # Generate a website
 python generate.py --topic "AI in Healthcare" --style technical
 ```
 
-### Example Output
-```
-[2025-06-16 00:04:49,843] INFO: [CLI] Generating site 1 of 1 for topic='AI in Healthcare'
-[2025-06-16 00:04:49,844] INFO: Generating website for topic='AI in Healthcare', style='technical'
-[2025-06-16 00:04:49,845] INFO: Selected sections: ['Introduction', 'Use Cases', 'Technical Details', 'Challenges', 'Summary']
-[2025-06-16 00:04:50,970] INFO: Calling LangChain runnable...
-[2025-06-16 00:05:10,865] INFO: [CLI] Site saved to: sites/d392a9ca-2a0c-45fe-8e93-3fb6cfc4dbe8.html
-
-[✔] Site 1/1
-    📄 Title: AI in Healthcare
-    📝 Meta: An in-depth look at the implementation, applications, technical aspects, and challenges of Artificial Intelligence in the healthcare sector.
-    📁 Path: sites/d392a9ca-2a0c-45fe-8e93-3fb6cfc4dbe8.html
-```
-
 ### Docker Deployment
 
+To build and run the application using Docker:
+
 ```bash
+# Clone the repository
+git clone https://github.com/Maksn610/GenWebAI.git
+cd GenWebAI
+
+# Create a .env file with your OpenAI API key
+cp .env.example .env
+# Then edit .env and set your key:
+# OPENAI_API_KEY=your_openai_key_here
+
 # Build and run with Docker Compose
 docker-compose up --build
 ```
@@ -88,9 +87,15 @@ pytest
 pytest --cov=app tests/
 ```
 
-## 📝 License
+## 🔄 CI/CD
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project uses GitHub Actions for continuous integration and deployment. On each push to the `main` branch:
+
+- The code is built and tested.
+- A Docker image is built and pushed to GitHub Container Registry (GHCR) using the latest `Dockerfile`.
+- Secrets for authentication are securely managed using GitHub Actions Secrets (e.g., `GHCR_TOKEN`).
+
+You can find the workflow in `.github/workflows/docker-publish.yml`.
 
 ## 🤝 Contributing
 
@@ -106,6 +111,8 @@ Maksym - [@Maksn610](https://github.com/Maksn610)
 
 Project Link: [https://github.com/Maksn610/GenWebAI](https://github.com/Maksn610/GenWebAI)
 
----
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ⭐️ Star this project if you find it useful!
